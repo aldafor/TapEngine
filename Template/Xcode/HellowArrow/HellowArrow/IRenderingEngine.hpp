@@ -21,6 +21,7 @@ enum DeviceOrientation
 };
 
 class IRenderingEngine* CreateRenderer1();
+class IRenderingEngine* CreateRenderer2();
 
 class IRenderingEngine{
 public:

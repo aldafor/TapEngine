@@ -23,6 +23,9 @@
 		D1549FE51708C2DA00C80364 /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = D1549FE41708C2DA00C80364 /* Icon@2x.png */; };
 		D1549FE71708C2EE00C80364 /* Icon-Small.png in Resources */ = {isa = PBXBuildFile; fileRef = D1549FE61708C2EE00C80364 /* Icon-Small.png */; };
 		D1549FF1171184E600C80364 /* RenderingEngineGL1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D1549FEF171184E600C80364 /* RenderingEngineGL1.cpp */; };
+		D1D97A5F171CAEC500BCE008 /* Simple.vert in Sources */ = {isa = PBXBuildFile; fileRef = D1D97A5E171CAEC500BCE008 /* Simple.vert */; };
+		D1D97A61171CAF2E00BCE008 /* Simple.frag in Sources */ = {isa = PBXBuildFile; fileRef = D1D97A60171CAF2E00BCE008 /* Simple.frag */; };
+		D1D97A63171D249A00BCE008 /* RenderingEngineGL2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D1D97A62171D249A00BCE008 /* RenderingEngineGL2.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +51,9 @@
 		D1549FE61708C2EE00C80364 /* Icon-Small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Icon-Small.png"; path = "../Icon-Small.png"; sourceTree = "<group>"; };
 		D1549FE81708CE7100C80364 /* IRenderingEngine.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = IRenderingEngine.hpp; sourceTree = "<group>"; };
 		D1549FEF171184E600C80364 /* RenderingEngineGL1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RenderingEngineGL1.cpp; sourceTree = "<group>"; };
+		D1D97A5E171CAEC500BCE008 /* Simple.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Simple.vert; sourceTree = "<group>"; };
+		D1D97A60171CAF2E00BCE008 /* Simple.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = Simple.frag; sourceTree = "<group>"; };
+		D1D97A62171D249A00BCE008 /* RenderingEngineGL2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RenderingEngineGL2.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +104,8 @@
 		D1549FB31708A40500C80364 /* HellowArrow */ = {
 			isa = PBXGroup;
 			children = (
+				D1D97A62171D249A00BCE008 /* RenderingEngineGL2.cpp */,
+				D1D97A5D171CAE7700BCE008 /* Shaders */,
 				D1549FBC1708A40500C80364 /* AppDelegate.h */,
 				D1549FBD1708A40500C80364 /* AppDelegate.mm */,
 				D1549FB41708A40500C80364 /* Supporting Files */,
@@ -124,6 +132,15 @@
 				D1549FC31708A40500C80364 /* Default-568h@2x.png */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		D1D97A5D171CAE7700BCE008 /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				D1D97A5E171CAEC500BCE008 /* Simple.vert */,
+				D1D97A60171CAF2E00BCE008 /* Simple.frag */,
+			);
+			name = Shaders;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -198,6 +215,9 @@
 				D1549FBE1708A40500C80364 /* AppDelegate.mm in Sources */,
 				D1549FD01708A5F800C80364 /* GLView.mm in Sources */,
 				D1549FF1171184E600C80364 /* RenderingEngineGL1.cpp in Sources */,
+				D1D97A5F171CAEC500BCE008 /* Simple.vert in Sources */,
+				D1D97A61171CAF2E00BCE008 /* Simple.frag in Sources */,
+				D1D97A63171D249A00BCE008 /* RenderingEngineGL2.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

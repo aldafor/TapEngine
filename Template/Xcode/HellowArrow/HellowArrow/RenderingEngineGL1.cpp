@@ -104,21 +104,20 @@ void RenderingEngineGL1::Render() const
 
 void RenderingEngineGL1::OnRotate(DeviceOrientation orientation)
 {
-    float angle = 0;
-    
     switch (orientation) {
         case LandscapeLeft:
-            angle = 270;
+            m_fDesiredAngle = 270;
             break;
         case PortraitUpsideDown:
-            angle = 180;
+            m_fDesiredAngle = 180;
             break;
         case LandscapeRight:
-            angle = 90;
+            m_fDesiredAngle = 90;
+            break;
+        default:
+            m_fDesiredAngle = 0;
             break;
     }
-    
-    m_fDesiredAngle = angle;
 }
 
 float RenderingEngineGL1::RotationDirection() const
