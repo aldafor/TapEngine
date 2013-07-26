@@ -35,8 +35,8 @@ public:
 private:
     float RotationDirection() const;
 private:
-    vector<Vertex> m_ConeVertices;
-    vector<GLubyte> m_ConeIndices;
+    GLuint m_iVertexBufferID;
+    GLuint m_iIndexBufferID;
     GLuint m_iBodyIndexCount;
     GLuint m_iDiskIndexCount;
     
@@ -75,11 +75,11 @@ void RenderingEngineGL1::Initialize(int width, int height)
     const float dtheta = TwoPi / iConeSlices;
     const int vertexCount = iConeSlices * 2 + 1;
     
-    m_ConeVertices.resize(vertexCount);
-    vector<Vertex>::iterator vertex = m_ConeVertices.begin();
+    vector<Vertex> coneVertices(vertexCount);
+    vector<Vertex>::iterator vertex = coneVertices.begin();
     
     // Cone's body
-    for (float theta = 0; vertex != m_ConeVertices.end() - 1; theta += dtheta)
+    for (float theta = 0; vertex != coneVertices.end() - 1; theta += dtheta)
     {
         //Grayscale gradient
         float brightness = abs(sin(theta));
@@ -106,8 +106,8 @@ void RenderingEngineGL1::Initialize(int width, int height)
     m_iBodyIndexCount = iConeSlices * 3;
     m_iDiskIndexCount = iConeSlices * 3;
     
-    m_ConeIndices.resize(m_iBodyIndexCount + m_iDiskIndexCount);
-    vector<GLubyte>::iterator index = m_ConeIndices.begin();
+    vector<GLubyte> coneIndices(m_iBodyIndexCount + m_iDiskIndexCount);
+    vector<GLubyte>::iterator index = coneIndices.begin();
     
     // Body triangles
     for (int i = 0; i < iConeSlices; i += 2)
@@ -160,33 +160,50 @@ void RenderingEngineGL1::Initialize(int width, int height)
     
 //    OnRotate(Portrait);
 //    m_fCurrentAngle = m_fDesiredAngle;
+    
+    // Create the VBO for the vertices
+    glGenBuffers(1, &m_iVertexBufferID);
+    glBindBuffer(GL_ARRAY_BUFFER, m_iVertexBufferID);
+    glBufferData(GL_ARRAY_BUFFER,
+                 coneVertices.size() * sizeof(coneVertices[0]),
+                 &coneVertices[0],
+                 GL_STATIC_DRAW);
+    
+    // Create VBO for the indices
+    glGenBuffers(1, &m_iIndexBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_iIndexBufferID);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                 coneIndices.size() * sizeof(coneIndices[0]),
+                 &coneIndices[0],
+                 GL_STATIC_DRAW);
 }
 
 void RenderingEngineGL1::Render() const
 {
     GLsizei stride = sizeof(Vertex);
-    const GLvoid* pCoords = &m_ConeVertices[0].Position.x;
-    const GLvoid* pColors = &m_ConeVertices[0].Color.x;
     
-    glClearColor(0.5f, 0.5f, 0.5f, 1);
+    //glClearColor(0.5f, 0.5f, 0.5f, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
-    
     glRotatef(m_fRotationAngle, 0, 0, 1);
     glScalef(m_fScale, m_fScale, m_fScale);
     
-    glVertexPointer(3, GL_FLOAT, stride, pCoords);
-    glColorPointer(4, GL_FLOAT, stride, pColors);
+    const GLvoid* pColorOffset = (GLvoid*) sizeof(vec3);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_iIndexBufferID);
+    glBindBuffer(GL_ARRAY_BUFFER, m_iVertexBufferID);
+    glVertexPointer(3, GL_FLOAT, stride, 0);
+    glColorPointer(4, GL_FLOAT, stride, pColorOffset);
     glEnableClientState(GL_VERTEX_ARRAY);
     
-    const GLvoid* pBodyIndices = &m_ConeIndices[0];
-    const GLvoid* pDiskIndices = &m_ConeIndices[m_iBodyIndexCount];
+    const GLvoid* pBodyOffset = 0;
+    const GLvoid* pDiskOffset = (GLvoid*) m_iBodyIndexCount;
     
     glEnableClientState(GL_COLOR_ARRAY);
-    glDrawElements(GL_TRIANGLES, m_iBodyIndexCount, GL_UNSIGNED_BYTE, pBodyIndices);
+    glDrawElements(GL_TRIANGLES, m_iBodyIndexCount, GL_UNSIGNED_BYTE, pBodyOffset);
     glDisableClientState(GL_COLOR_ARRAY);
     glColor4f(1, 1, 1, 1);
-    glDrawElements(GL_TRIANGLES, m_iDiskIndexCount, GL_UNSIGNED_BYTE, pDiskIndices);
+    glDrawElements(GL_TRIANGLES, m_iDiskIndexCount, GL_UNSIGNED_BYTE, pDiskOffset);
     
     glDisableClientState(GL_VERTEX_ARRAY);
     glPopMatrix();
