@@ -35,8 +35,10 @@ public:
 private:
     float RotationDirection() const;
 private:
-    vector<Vertex> m_Cone;
-    vector<Vertex> m_Disk;
+    vector<Vertex> m_ConeVertices;
+    vector<GLubyte> m_ConeIndices;
+    GLuint m_iBodyIndexCount;
+    GLuint m_iDiskIndexCount;
     
     GLfloat m_fRotationAngle;
     GLfloat m_fScale;
@@ -65,61 +67,63 @@ RenderingEngineGL1::RenderingEngineGL1() : m_fRotationAngle(0), m_fScale(1)
 
 void RenderingEngineGL1::Initialize(int width, int height)
 {
-    m_PivotPoint = ivec2(width/2, height/2);
+    m_PivotPoint = ivec2(width / 2, height / 2);
     
     const float fConeRadius = 0.5f;
     const float fConeHeight = 1.866f;
     const int iConeSlices = 40;
+    const float dtheta = TwoPi / iConeSlices;
+    const int vertexCount = iConeSlices * 2 + 1;
     
+    m_ConeVertices.resize(vertexCount);
+    vector<Vertex>::iterator vertex = m_ConeVertices.begin();
+    
+    // Cone's body
+    for (float theta = 0; vertex != m_ConeVertices.end() - 1; theta += dtheta)
     {
-        // Generate vertices for the disk
-        m_Disk.resize(iConeSlices + 2);
+        //Grayscale gradient
+        float brightness = abs(sin(theta));
+        vec4 color(brightness, brightness, brightness, 1);
         
-        // Initialize de center vertex of the triangle fan
-        vector<Vertex>::iterator currentVertex = m_Disk.begin();
-        currentVertex->Color = vec4(0.75f, 0.75f, 0.75f, 1);
-        currentVertex->Position.x = 0;
-        currentVertex->Position.y = 1 - fConeHeight;
-        currentVertex->Position.z = 0;
-        currentVertex++;
+        //Apex vertex
+        vertex->Position = vec3(0,1,0);
+        vertex->Color = color;
+        vertex++;
         
-        //Initialize de rim vertices of the triangle fan
-        const float dtheta = TwoPi / iConeSlices;
-        for (float theta = 0; currentVertex != m_Disk.end(); theta += dtheta)
-        {
-            currentVertex->Color = vec4(0.75f, 0.75f, 0.75f, 1);
-            currentVertex->Position.x = fConeRadius * cos(theta);
-            currentVertex->Position.y = 1 - fConeHeight;
-            currentVertex->Position.z = fConeRadius * sin(theta);
-            currentVertex++;
-        }
+        //Rim vertex
+        vertex->Position.x = fConeRadius * cos(theta);
+        vertex->Position.y = 1 - fConeHeight;
+        vertex->Position.z = fConeRadius * sin(theta);
+        vertex->Color = color;
+        vertex++;
     }
     
+    // Disk center
+    vertex->Position = vec3(0, 1 - fConeHeight, 0);
+    vertex->Color = vec4(1, 1, 1, 1);
+    
+    // Index generation
+    m_iBodyIndexCount = iConeSlices * 3;
+    m_iDiskIndexCount = iConeSlices * 3;
+    
+    m_ConeIndices.resize(m_iBodyIndexCount + m_iDiskIndexCount);
+    vector<GLubyte>::iterator index = m_ConeIndices.begin();
+    
+    // Body triangles
+    for (int i = 0; i < iConeSlices; i += 2)
     {
-        // Generate vertices for the body of the cone
-        m_Cone.resize((iConeSlices + 1) * 2);
-        
-        // Initialice vertices of the triangle strip
-        vector<Vertex>::iterator currentVertex = m_Cone.begin();
-        const float dtheta = TwoPi / iConeSlices;
-        for (float theta = 0; currentVertex != m_Cone.end(); theta += dtheta)
-        {
-            //Grayscale gradient
-            float brightness = abs(sin(theta));
-            vec4 color(brightness, brightness, brightness, 1);
-            
-            //Apex vertex
-            currentVertex->Position = vec3(0,1,0);
-            currentVertex->Color = color;
-            currentVertex++;
-            
-            //Rim vertex
-            currentVertex->Position.x = fConeRadius * cos(theta);
-            currentVertex->Position.y = 1 - fConeHeight;
-            currentVertex->Position.z = fConeRadius * sin(theta);
-            currentVertex->Color = color;
-            currentVertex++;
-        }
+        *index++ = i;
+        *index++ = (i + 1) % (2 * iConeSlices);
+        *index++ = (i + 3) % (2 * iConeSlices);
+    }
+    
+    // Disk triangles
+    const int iDiskCenterIndex = vertexCount - 1;
+    for (int i = 1; i < iConeSlices * 2 + 1; i += 2)
+    {
+        *index++ = iDiskCenterIndex;
+        *index++ = i;
+        *index++ = (i + 2) % (2 * iConeSlices);
     }
     
     // Create the depth buffer
@@ -160,29 +164,31 @@ void RenderingEngineGL1::Initialize(int width, int height)
 
 void RenderingEngineGL1::Render() const
 {
+    GLsizei stride = sizeof(Vertex);
+    const GLvoid* pCoords = &m_ConeVertices[0].Position.x;
+    const GLvoid* pColors = &m_ConeVertices[0].Color.x;
+    
     glClearColor(0.5f, 0.5f, 0.5f, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
     
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    
     glRotatef(m_fRotationAngle, 0, 0, 1);
     glScalef(m_fScale, m_fScale, m_fScale);
     
-    // Draw the cone
-    glVertexPointer(3, GL_FLOAT, sizeof(Vertex), &m_Cone[0].Position.x);
-    glColorPointer(4, GL_FLOAT, sizeof(Vertex), &m_Cone[0].Color.x);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, m_Cone.size());
+    glVertexPointer(3, GL_FLOAT, stride, pCoords);
+    glColorPointer(4, GL_FLOAT, stride, pColors);
+    glEnableClientState(GL_VERTEX_ARRAY);
     
-    // Draw the disk that caps off the base of the cone
-    glVertexPointer(3, GL_FLOAT, sizeof(Vertex), &m_Disk[0].Position.x);
-    glColorPointer(4, GL_FLOAT, sizeof(Vertex), &m_Disk[0].Color.x);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, m_Disk.size());
+    const GLvoid* pBodyIndices = &m_ConeIndices[0];
+    const GLvoid* pDiskIndices = &m_ConeIndices[m_iBodyIndexCount];
+    
+    glEnableClientState(GL_COLOR_ARRAY);
+    glDrawElements(GL_TRIANGLES, m_iBodyIndexCount, GL_UNSIGNED_BYTE, pBodyIndices);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glColor4f(1, 1, 1, 1);
+    glDrawElements(GL_TRIANGLES, m_iDiskIndexCount, GL_UNSIGNED_BYTE, pDiskIndices);
     
     glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-    
     glPopMatrix();
 }
 
